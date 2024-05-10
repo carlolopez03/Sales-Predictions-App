@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 from io import StringIO
+import plotly.express as px
+import functions as fn
 
 #Loading data
 @st.cache_data
@@ -42,3 +45,64 @@ if null_button:
     df.isna().sum().to_string(buffer)
     nulls = buffer.getvalue()
     st.text(nulls)
+
+#Columns for plotting
+columns = df.columns
+target = 'Item_Outlet_Sales'
+features = [col for col in columns if col != target]
+
+#Selectbox for columns
+eda_column = st.selectbox('Column to Explore', columns, index=None)
+
+#Function for models
+if eda_column:
+    if df[eda_column].dtype == 'object':
+        fig = fn.explore_categorical(df, eda_column)
+    else:
+        fig = fn.explore_numeric(df, eda_column)
+
+#Plotting columns
+    st.header(f'Display Plots for {eda_column}')
+    st.pyplot(fig)
+
+## Select box for features vs target
+feature = st.selectbox('Compare Feature to Target', features, index=None)
+
+## Conditional: if feature was chosen
+if feature:
+    ## Check if feature is numeric or object
+    if df[feature].dtype == 'object':
+        comparison = df.groupby('Item_Outlet_Sales').count()
+        title = f'Count of {feature} by {target}'
+    else:
+        comparison = df.groupby('Item_Outlet_Sales').mean()
+        title = f'Mean {feature} by {target}'
+
+    ## Display appropriate comparison
+    pfig = px.bar(comparison, y=feature, title=title)
+    st.plotly_chart(pfig)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
